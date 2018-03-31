@@ -3,5 +3,8 @@ name = "noobchain-rs"
 version = "0.1.0"
 authors = ["Kevin Kelley <kevin@kelleysoft.com>"]
 
+[lib]
+name = "noobchain"
+
 [dependencies]
 ring = "0.12.1"
