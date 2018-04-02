@@ -8,3 +8,4 @@ name = "noobchain"
 
 [dependencies]
 ring = "0.12.1"
+chrono = "0.4"
