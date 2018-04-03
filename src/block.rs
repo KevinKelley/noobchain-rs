@@ -2,15 +2,23 @@ use std::fmt::{Debug, Formatter, Error};
 use std::iter;
 use super::*;
 
-
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Block {
 
-	pub hash: Vec<u8>,
+	#[serde(with = "hexify")]
+    pub hash: Vec<u8>,
+
+	#[serde(with = "hexify")]
 	pub prev_hash: Vec<u8>,
+
+	#[serde(with = "hexify")]
 	data: Vec<u8>,
+
 	time_stamp: u64,
+
 	nonce: u64,
+
+	#[serde(with = "hexify")]
 	merkle_root: Vec<u8>,
 }
 
@@ -20,6 +28,33 @@ pub struct Block {
 //     }
 // }
 
+// for example
+mod hexify {
+    use serde::{Serializer, de, Deserialize, Deserializer};
+    use super::*;
+
+    pub fn serialize<S>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        serializer.serialize_str(&to_hex_string(bytes))
+
+    }
+    // Could also use a wrapper type with a Display implementation to avoid
+    // allocating the String.
+    //
+	// pub fn serialize<S>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error>
+	//     where S: Serializer
+	// {
+	//     serializer.collect_str(&base64::display::Base64Display::standard(bytes))
+	// }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
+        where D: Deserializer<'de>
+    {
+        let s = <&str>::deserialize(deserializer)?;
+        Ok(from_hex_string(s)) //.map_err(de::Error::custom)
+    }
+}
 
 
 

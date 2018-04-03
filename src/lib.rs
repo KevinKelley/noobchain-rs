@@ -4,10 +4,16 @@
 
 extern crate ring;
 extern crate chrono;
+#[macro_use] extern crate serde_derive;
+extern crate serde;
+extern crate serde_bytes;
+
+extern crate itertools;
 
 pub mod crypto;
 pub mod block;
 pub mod chain;
+
 
 
 pub fn to_hex_string(bytes: &[u8]) -> String {
@@ -15,10 +21,18 @@ pub fn to_hex_string(bytes: &[u8]) -> String {
 	//let s = String::from_utf8(bytes.clone()).expect("Found invalid UTF-8");
 	//let s = String::from_utf8_lossy(bytes).into_owned();
 
-    let strs: Vec<String> = bytes.iter()
-                                 .map(|b| format!("{:02X}", b))
-                                 .collect();
-    strs.join("")
+    // let strs: Vec<String> = bytes.iter()
+    //                              .map(|b| format!("{:02X}", b))
+    //                              .collect();
+    //strs.join("")
+
+	use itertools::Itertools;
+	format!("{:02x}", bytes.iter().format(""))
+}
+pub fn from_hex_string(hex: &str) -> Vec<u8> {
+	let acc = vec!();
+
+	acc
 }
 
 pub fn count_leading(bytes: &Vec<u8>, ch: u8) -> usize {

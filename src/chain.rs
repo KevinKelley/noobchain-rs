@@ -4,7 +4,7 @@ use std::ops::{Index, IndexMut};
 use std::iter;
 use super::*;
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct NoobChain {
 	pub blockchain: Vec<Block>,
 

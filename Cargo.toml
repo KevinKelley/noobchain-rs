@@ -9,3 +9,8 @@ name = "noobchain"
 [dependencies]
 ring = "0.12.1"
 chrono = "0.4"
+itertools = "0.7"
+serde = "1.0"
+serde_derive = "1.0"
+serde_bytes = "0.10"
+serde_json = "1.0"
