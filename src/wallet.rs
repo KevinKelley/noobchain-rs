@@ -170,7 +170,14 @@ impl Wallet {
 		for (key, utxo) in &self.UTXOs {
 			total += utxo.value;
 			inputs.push(TransactionInput::new(&utxo.transaction_output_id));
-			if total > value { break; }
+			if total >= value { break; }
+		}
+
+		if total > value {
+			// send excess back to self unspent
+			let excess = total - value;
+			println!("wasting {}", excess);
+			//self.send_funds(chain, self.public_key(), excess);
 		}
 
 		let mut new_txn: Transaction = Transaction::new(self.public_key(), recipient, value, inputs);

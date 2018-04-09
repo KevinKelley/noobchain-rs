@@ -26,6 +26,7 @@ use wallet::Wallet;
 // 	}
 	
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Transaction {
 	pub transaction_id: Vec<u8>, // this is also the hash of the transaction.
 	pub sender: Key,			 // senders address/public key.
@@ -140,7 +141,7 @@ impl Transaction {
 		let private_key = wallet.private_key();
 		let public_key = wallet.public_key();
 		self.signature = apply_ECDSA_sig(wallet, &data);
-		println!("signed {} with {}", data.as_hex_string(), self.signature.as_hex_string());
+		//println!("signed {} with {}", data.as_hex_string(), self.signature.as_hex_string());
 	}
 	///Verifies the data we signed hasn't been tampered with
 	pub fn verify_signature(&self) -> bool {
@@ -159,7 +160,7 @@ impl Transaction {
 
 
 #[allow(non_snake_case)]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TransactionInput {
 	pub transaction_output_id: Vec<u8>,
 	pub UTXO: Option<TransactionOutput>,
@@ -192,8 +193,15 @@ pub struct TransactionOutput {
 impl TransactionOutput {
 	pub fn new(recipient: &Key, value: f64, parent: &[u8]) -> Self {
 
-		let key: Vec<u8> = recipient.as_hex_string().into_bytes();
-		
+		//let key: Vec<u8> = recipient.as_hex_string().into_bytes();
+		let key;
+		if let &Key::PublicKey(ref bytes) = recipient {
+			key = bytes.clone()
+		} else {
+			key = vec!(0u8);
+			println!("recipient not a public key...")
+		}
+
 		let mut txo = Self {
 			recipient: key,
 			value: value,

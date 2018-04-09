@@ -1,6 +1,8 @@
 use std::fmt::{Debug, Formatter, Error};
 use std::iter;
 use ring::digest;
+use txn::Transaction;
+use chain::NoobChain;
 use super::*;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -12,8 +14,10 @@ pub struct Block {
 	#[serde(with = "hexify")]
 	pub prev_hash: Vec<u8>,
 
-	#[serde(with = "hexify")]
-	data: Vec<u8>,
+	//#[serde(with = "hexify")]
+	//data: Vec<u8>,
+
+	pub transactions: Vec<Transaction>,
 
 	time_stamp: u64,
 
@@ -33,11 +37,12 @@ pub struct Block {
 
 impl Block 
 {
-	pub fn new(data: &[u8], prev_hash: &[u8]) -> Self {
+	pub fn new(prev_hash: &[u8]) -> Self { // data: &[u8],
 
 		let mut block = Self {
 			hash: vec!(),
-			data: Vec::from(data),
+			//data: Vec::from(data),
+			transactions: vec!(),
 			prev_hash: Vec::from(prev_hash),
 			time_stamp: now(),
 			nonce: 0,
@@ -51,7 +56,8 @@ impl Block
 		let mut block = Self {
 			hash: vec!(),
 			//data: unsafe { String::from(str_data).as_mut_vec().clone() },
-			data: Vec::from(str_data),
+			//data: Vec::from(str_data),
+			transactions: vec!(),
 			prev_hash: Vec::from(prev_hash),
 			time_stamp: now(),
 			nonce: 0,
@@ -63,17 +69,6 @@ impl Block
 
 	pub fn calculate_hash(&self) -> Vec<u8> {
 		
-		// let one_shot = digest::digest(&digest::SHA384, b"hello, world");
-
-		// let mut ctx = digest::Context::new(&digest::SHA384);
-		// ctx.update(b"hello");
-		// ctx.update(b", ");
-		// ctx.update(b"world");
-		// let multi_part = ctx.finish();
-
-		// assert_eq!(&one_shot.as_ref(), &multi_part.as_ref());
-
-
 		let mut ctx = digest::Context::new(&digest::SHA256);
 		ctx.update(&self.prev_hash);
 		ctx.update(&format!("{}", self.time_stamp).into_bytes());
@@ -82,27 +77,12 @@ impl Block
 		let multi_part = ctx.finish();
 
 		return Vec::from(multi_part.as_ref());
-
-
-		// let mut to_hash = vec![];
-		// to_hash.append(&mut self.prev_hash.clone());
-		// to_hash.append(&mut format!("{}", self.time_stamp).into_bytes());
-		// to_hash.append(&mut format!("{}", self.nonce).into_bytes());
-		// to_hash.append(&mut self.merkle_root.clone());
-
-
-		// //let calculated_hash = crypto::apply_sha256(&to_hash);
-		// // return calculated_hash;
-
-		// let hash = digest::digest(&digest::SHA256, &to_hash);
-		// let vec: Vec<u8> = hash.as_ref().to_vec();
-		// return vec;
 	}	
 
 	//Increases nonce value until hash target is reached.
 	pub fn mine_block(&mut self, difficulty: usize) {
 		
-		self.merkle_root = get_merkle_root(&self.data);
+		self.merkle_root = get_merkle_root(&self.transactions);
 
 		let target = get_difficulty_string(difficulty).into_bytes();
 		let prefix = Vec::from(&self.hash[0..difficulty]);
@@ -122,8 +102,20 @@ impl Block
 		println!("Block Mined! : {}", super::to_hex_string(&self.hash));
 	}
 
-	pub fn add_transaction() -> Result<bool, ()> {
-		Err(())
+	pub fn add_transaction(&mut self, ref mut chain: &mut NoobChain, mut tx: Transaction) -> Result<bool, ()> {
+
+		//process transaction and check if valid, unless block is genesis block then ignore.
+		//if transaction == null { return Err(()) }	
+		if vec!(0u8) == self.prev_hash {
+			if tx.process_transaction(chain) != true {
+				println!("Transaction failed to process. Discarded.");
+				return Err(());
+			}
+		}
+
+		self.transactions.push(tx);
+		//println!("Transaction Successfully added to Block");
+		Ok(true)
 	}
 }
 
@@ -139,16 +131,15 @@ mod test {
 			println!("1: {:?}, 2: {:?}", String::from("Hi im the first block").as_mut_vec(), String::from("0").as_mut_vec());
 
 			let genesis_block: Block = Block::new(
-				b"Hi im the first block", 
 				b"0");
 			println!("Hash for block 1 : {:?}", genesis_block.hash);
 			
 			let second_block: Block = Block::new(
-				b"Yo im the second block", &genesis_block.hash);
+				&genesis_block.hash);
 			println!("Hash for block 2 : {:?}", second_block.hash);
 			
 			let third_block: Block = Block::new(
-				b"Hey im the third block", &second_block.hash);
+				&second_block.hash);
 			println!("Hash for block 3 : {:?}", third_block.hash);	
 		}
 	}

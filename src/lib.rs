@@ -18,32 +18,7 @@ pub mod wallet;
 pub mod txn;
 
 
-// pub trait Key {
-// 	fn as_hex_str(&self) -> String;
-// 	fn as_base64(&self) -> String;
-// }
-// pub enum PublicKey { Bytes(Vec<u8>) }
-// pub enum PrivateKey { Bytes(Vec<u8>) }
-
-// impl Key for PublicKey {
-	
-// 	fn as_hex_str(&self) -> String {
-// 		String::from("")
-// 	}
-// 	fn as_base64(&self) -> String {
-// 		String::from("")
-// 	}
-// }
-
-// impl Key for PrivateKey {
-	
-// 	fn as_hex_str(&self) -> String {
-// 		String::from("")
-// 	}
-// 	fn as_base64(&self) -> String {
-// 		String::from("")
-// 	}
-// }
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Key {
 	PublicKey(Vec<u8>),
 	PrivateKey(Vec<u8>),
@@ -98,7 +73,8 @@ pub fn hash_len() -> usize {
 	crypto::apply_sha256(&vec!(0u8)).len()
 }
 
-pub fn get_merkle_root(data: &Vec<u8>) -> Vec<u8> {
+use txn::Transaction;
+pub fn get_merkle_root(transactions: &Vec<Transaction>) -> Vec<u8> {
 	vec!(1u8, 2u8, 3u8)
 }
 
