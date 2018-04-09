@@ -1,22 +1,33 @@
 
 use block::Block;
+use std::collections::HashMap;
+use txn::TransactionOutput;
 use std::ops::{Index, IndexMut};
 use std::iter;
 use super::*;
 
+#[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NoobChain {
 	pub blockchain: Vec<Block>,
 
 	pub difficulty: usize,
+
+	pub UTXOs: HashMap<Vec<u8>, TransactionOutput>, // = HashMap::new()
 }
 
+
+
 impl NoobChain {
+
+	pub const MINIMUM_TRANSACTION: f64 = 0.01;
+
 
 	pub fn new() -> Self {
 		Self {
 			blockchain: vec!(),
 			difficulty: 2,
+			UTXOs: HashMap::new()
 		}
 	}
 
@@ -25,6 +36,11 @@ impl NoobChain {
 	}
 	pub fn len(&self) -> usize {
 		self.blockchain.len()
+	}
+	pub fn add_utxo(&mut self, utxo: TransactionOutput) {
+		//let key: String = utxo.transaction_output_id.as_hex_string();
+		let key: Vec<u8> = utxo.transaction_output_id.clone();
+		self.UTXOs.insert(key, utxo);
 	}
 
 	pub fn latest_block(&mut self) -> &mut Block {
@@ -102,12 +118,5 @@ mod test {
 		chain.add(Block::with_string_data("Hey im the third block", &hash));
 		
 		assert!(chain.is_chain_valid());
-
-		// String chainJson = new GsonBuilder().setPrettyPrinting().create().toJson(chain);		
-		// System.out.println(blockchainJson);
 	}
-}
-
-pub fn main() {
-
 }

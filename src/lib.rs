@@ -3,6 +3,7 @@
 #![allow(unused_variables)]
 
 extern crate ring;
+extern crate untrusted;
 extern crate chrono;
 #[macro_use] extern crate serde_derive;
 extern crate serde;
@@ -13,11 +14,58 @@ extern crate itertools;
 pub mod crypto;
 pub mod block;
 pub mod chain;
+pub mod wallet;
+pub mod txn;
 
 
+// pub trait Key {
+// 	fn as_hex_str(&self) -> String;
+// 	fn as_base64(&self) -> String;
+// }
+// pub enum PublicKey { Bytes(Vec<u8>) }
+// pub enum PrivateKey { Bytes(Vec<u8>) }
 
+// impl Key for PublicKey {
+	
+// 	fn as_hex_str(&self) -> String {
+// 		String::from("")
+// 	}
+// 	fn as_base64(&self) -> String {
+// 		String::from("")
+// 	}
+// }
+
+// impl Key for PrivateKey {
+	
+// 	fn as_hex_str(&self) -> String {
+// 		String::from("")
+// 	}
+// 	fn as_base64(&self) -> String {
+// 		String::from("")
+// 	}
+// }
+pub enum Key {
+	PublicKey(Vec<u8>),
+	PrivateKey(Vec<u8>),
+}
+
+pub trait Hex {
+	fn as_hex_string(&self) -> String;
+}
+impl Hex for Key {
+	fn as_hex_string(&self) -> String {
+		match *self {
+			Key::PublicKey(ref data) => { return to_hex_string(&data) }
+			Key::PrivateKey(ref data) => { return to_hex_string(&data) }
+		}
+	}
+}
+impl Hex for Vec<u8> {
+	fn as_hex_string(&self) -> String {
+		to_hex_string(&self)
+	}
+}
 pub fn to_hex_string(bytes: &[u8]) -> String {
-
 	//let s = String::from_utf8(bytes.clone()).expect("Found invalid UTF-8");
 	//let s = String::from_utf8_lossy(bytes).into_owned();
 
@@ -29,10 +77,17 @@ pub fn to_hex_string(bytes: &[u8]) -> String {
 	use itertools::Itertools;
 	format!("{:02x}", bytes.iter().format(""))
 }
-pub fn from_hex_string(hex: &str) -> Vec<u8> {
-	let acc = vec!();
 
-	acc
+/// Decode the input string from hex into individual bytes
+pub fn from_hex_string(hex_string: &str) -> Vec<u8> {
+	//hex_to_bytes(hex_string)
+    let input_chars: Vec<_> = hex_string.chars().collect();
+
+    input_chars.chunks(2).map(|chunk| {
+        let first_byte = chunk[0].to_digit(16).unwrap();
+        let second_byte = chunk[1].to_digit(16).unwrap();
+        ((first_byte << 4) | second_byte) as u8
+    }).collect()
 }
 
 pub fn count_leading(bytes: &Vec<u8>, ch: u8) -> usize {
@@ -72,25 +127,54 @@ use std::error::Error;
 use std::fmt;
 
 #[derive(Debug)]
-struct MyError {
+pub struct NoobError {
     details: String
 }
 
-impl MyError {
-    fn new(msg: &str) -> MyError {
-        MyError{details: msg.to_string()}
+impl NoobError {
+    fn new(msg: &str) -> NoobError {
+        NoobError{details: msg.to_string()}
     }
 }
 
-impl fmt::Display for MyError {
+impl fmt::Display for NoobError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f,"{}",self.details)
     }
 }
 
-impl Error for MyError {
+impl Error for NoobError {
     fn description(&self) -> &str {
         &self.details
+    }
+}
+
+
+// for example
+mod hexify {
+    use serde::{Serializer, de, Deserialize, Deserializer};
+    use super::*;
+
+    pub fn serialize<S>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        serializer.serialize_str(&to_hex_string(bytes))
+
+    }
+    // Could also use a wrapper type with a Display implementation to avoid
+    // allocating the String.
+    //
+	// pub fn serialize<S>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error>
+	//     where S: Serializer
+	// {
+	//     serializer.collect_str(&base64::display::Base64Display::standard(bytes))
+	// }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
+        where D: Deserializer<'de>
+    {
+        let s = <&str>::deserialize(deserializer)?;
+        Ok(from_hex_string(s)) //.map_err(de::Error::custom)
     }
 }
 
@@ -100,17 +184,17 @@ mod test {
   use super::*;
 
 	#[test]
-		fn test_to_hex_string() {
+	fn test_to_hex_string() {
 		let bytes: Vec<u8> = vec![0xFF, 0, 0xAA];
 		let actual = to_hex_string(&bytes);
-		assert_eq!("FF00AA", actual);
+		assert_eq!("ff00aa", actual);
 	}
 
 	// not a [test]
 	// a test function that returns our error result
-	fn raises_my_error(yes: bool) -> Result<(),MyError> {
+	fn raises_my_error(yes: bool) -> Result<(),NoobError> {
 	    if yes {
-	        Err(MyError::new("borked"))
+	        Err(NoobError::new("borked"))
 	    } else {
 	        Ok(())
 	    }

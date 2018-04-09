@@ -1,5 +1,6 @@
 use std::fmt::{Debug, Formatter, Error};
 use std::iter;
+use ring::digest;
 use super::*;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -28,34 +29,6 @@ pub struct Block {
 //     }
 // }
 
-// for example
-mod hexify {
-    use serde::{Serializer, de, Deserialize, Deserializer};
-    use super::*;
-
-    pub fn serialize<S>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
-    {
-        serializer.serialize_str(&to_hex_string(bytes))
-
-    }
-    // Could also use a wrapper type with a Display implementation to avoid
-    // allocating the String.
-    //
-	// pub fn serialize<S>(bytes: &[u8], serializer: S) -> Result<S::Ok, S::Error>
-	//     where S: Serializer
-	// {
-	//     serializer.collect_str(&base64::display::Base64Display::standard(bytes))
-	// }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
-        where D: Deserializer<'de>
-    {
-        let s = <&str>::deserialize(deserializer)?;
-        Ok(from_hex_string(s)) //.map_err(de::Error::custom)
-    }
-}
-
 
 
 impl Block 
@@ -77,7 +50,8 @@ impl Block
 
 		let mut block = Self {
 			hash: vec!(),
-			data: unsafe { String::from(str_data).as_mut_vec().clone() },
+			//data: unsafe { String::from(str_data).as_mut_vec().clone() },
+			data: Vec::from(str_data),
 			prev_hash: Vec::from(prev_hash),
 			time_stamp: now(),
 			nonce: 0,
@@ -89,15 +63,40 @@ impl Block
 
 	pub fn calculate_hash(&self) -> Vec<u8> {
 		
-		let mut to_hash = vec![];
-		to_hash.append(&mut self.prev_hash.clone());
-		to_hash.append(&mut format!("{}", self.time_stamp).into_bytes());
-		to_hash.append(&mut format!("{}", self.nonce).into_bytes());
-		to_hash.append(&mut self.merkle_root.clone());
+		// let one_shot = digest::digest(&digest::SHA384, b"hello, world");
+
+		// let mut ctx = digest::Context::new(&digest::SHA384);
+		// ctx.update(b"hello");
+		// ctx.update(b", ");
+		// ctx.update(b"world");
+		// let multi_part = ctx.finish();
+
+		// assert_eq!(&one_shot.as_ref(), &multi_part.as_ref());
 
 
-		let calculated_hash = crypto::apply_sha256(&to_hash);
-		return calculated_hash;
+		let mut ctx = digest::Context::new(&digest::SHA256);
+		ctx.update(&self.prev_hash);
+		ctx.update(&format!("{}", self.time_stamp).into_bytes());
+		ctx.update(&format!("{}", self.nonce).into_bytes());
+		ctx.update(&self.merkle_root);
+		let multi_part = ctx.finish();
+
+		return Vec::from(multi_part.as_ref());
+
+
+		// let mut to_hash = vec![];
+		// to_hash.append(&mut self.prev_hash.clone());
+		// to_hash.append(&mut format!("{}", self.time_stamp).into_bytes());
+		// to_hash.append(&mut format!("{}", self.nonce).into_bytes());
+		// to_hash.append(&mut self.merkle_root.clone());
+
+
+		// //let calculated_hash = crypto::apply_sha256(&to_hash);
+		// // return calculated_hash;
+
+		// let hash = digest::digest(&digest::SHA256, &to_hash);
+		// let vec: Vec<u8> = hash.as_ref().to_vec();
+		// return vec;
 	}	
 
 	//Increases nonce value until hash target is reached.
