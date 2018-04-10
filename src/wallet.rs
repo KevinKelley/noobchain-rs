@@ -173,11 +173,8 @@ impl Wallet {
 			if total >= value { break; }
 		}
 
-		if total > value {
-			// send excess back to self unspent
-			let excess = total - value;
-			println!("wasting {}", excess);
-			//self.send_funds(chain, self.public_key(), excess);
+		if total < value {
+			println!("couldn't find enough UTXO: ({} < {})", total, value);
 		}
 
 		let mut new_txn: Transaction = Transaction::new(self.public_key(), recipient, value, inputs);
