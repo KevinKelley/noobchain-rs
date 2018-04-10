@@ -69,10 +69,10 @@ mod test {
 
 fn main() {
 	
+	NoobChain::main();
+
 	// let mut chain = NoobChain::new();
 	// let difficulty = chain.difficulty;
-
-	NoobChain::main();
 
 	// let genesis_block: Block = Block::new(b"Hi I'm the first block", &NoobChain::genesis_hash());
 	// println!("Hash for block 1 : {}", to_hex_string(&genesis_block.hash));

@@ -3,27 +3,6 @@ use super::*;
 use crypto::{apply_sha256, apply_ECDSA_sig, verify_ECDSA_sig};
 use chain::NoobChain;
 use wallet::Wallet;
-
-// public class Transaction {
-	
-// 	public String transactionId; // this is also the hash of the transaction.
-// 	public PublicKey sender; // senders address/public key.
-// 	public PublicKey recipient; // Recipients address/public key.
-// 	public float value;
-// 	public byte[] signature; // this is to prevent anybody else from spending funds in our wallet.
-	
-// 	public ArrayList<TransactionInput> inputs = new ArrayList<TransactionInput>();
-// 	public ArrayList<TransactionOutput> outputs = new ArrayList<TransactionOutput>();
-	
-// 	private static int sequence = 0; // a rough count of how many transactions have been generated. 
-	
-// 	// Constructor: 
-// 	public Transaction(PublicKey from, PublicKey to, float value,  ArrayList<TransactionInput> inputs) {
-// 		this.sender = from;
-// 		this.recipient = to;
-// 		this.value = value;
-// 		this.inputs = inputs;
-// 	}
 	
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -39,7 +18,7 @@ pub struct Transaction {
 	
 }
 
-	static mut SEQUENCE: i64 = 0;   //A rough count of how many transactions have been generated 
+static mut SEQUENCE: i64 = 0;   //A rough count of how many transactions have been generated 
 
 impl Transaction {
 
@@ -79,14 +58,17 @@ impl Transaction {
 					
 			//gather transaction inputs (Make sure they are unspent):
 			for i in &mut self.inputs {
-//				i.UTXO = NoobChain.UTXOs.get(i.transaction_output_id);
 				let utxo: &TransactionOutput = chain.UTXOs.get(&i.transaction_output_id).unwrap();
 				i.UTXO = Some(utxo.clone());
 			}
 
 			//check if transaction is valid:
-			if self.get_inputs_value() < NoobChain::MINIMUM_TRANSACTION {
-				println!("#Transaction Inputs too small: {}", self.get_inputs_value());
+			if self.value < NoobChain::MINIMUM_TRANSACTION {
+				println!("#Transaction below minimum: {} (rejecting)", self.value);
+				return false;
+			}
+			if self.get_inputs_value() < self.value {
+				println!("#Transaction Inputs too small: ({} < {}) (rejecting)", self.get_inputs_value(), self.value);
 				return false;
 			}
 			
@@ -122,6 +104,7 @@ impl Transaction {
 				total += txo.value;				
 			}
 		}
+		println!("inputs value: {}  (from {} inputs)", total, self.inputs.len());
 		total
 	}
 

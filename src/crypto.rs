@@ -64,7 +64,7 @@ pub fn apply_ECDSA_sig(wallet: &Wallet, input: &[u8]) -> Vec<u8> {
 ///Verifies a signature 
 #[allow(non_snake_case)]
 pub fn verify_ECDSA_sig(public_key: &Key, data: &[u8], signature: &[u8]) -> bool {
-	println!("signature: {}", signature.to_vec().as_hex_string());
+	//println!("ECDSA_sig: {}", signature.to_vec().as_hex_string());
 	if let &Key::PublicKey(ref bytes) = public_key {
 		let rslt = verify_ed25519(
 			untrusted::Input::from(bytes),

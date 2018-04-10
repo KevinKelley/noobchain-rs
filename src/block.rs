@@ -14,9 +14,6 @@ pub struct Block {
 	#[serde(with = "hexify")]
 	pub prev_hash: Vec<u8>,
 
-	//#[serde(with = "hexify")]
-	//data: Vec<u8>,
-
 	pub transactions: Vec<Transaction>,
 
 	time_stamp: u64,
@@ -37,11 +34,10 @@ pub struct Block {
 
 impl Block 
 {
-	pub fn new(prev_hash: &[u8]) -> Self { // data: &[u8],
+	pub fn new(prev_hash: &[u8]) -> Self { 
 
 		let mut block = Self {
 			hash: vec!(),
-			//data: Vec::from(data),
 			transactions: vec!(),
 			prev_hash: Vec::from(prev_hash),
 			time_stamp: now(),
@@ -55,8 +51,6 @@ impl Block
 
 		let mut block = Self {
 			hash: vec!(),
-			//data: unsafe { String::from(str_data).as_mut_vec().clone() },
-			//data: Vec::from(str_data),
 			transactions: vec!(),
 			prev_hash: Vec::from(prev_hash),
 			time_stamp: now(),
@@ -104,9 +98,11 @@ impl Block
 
 	pub fn add_transaction(&mut self, ref mut chain: &mut NoobChain, mut tx: Transaction) -> Result<bool, ()> {
 
-		//process transaction and check if valid, unless block is genesis block then ignore.
+		//process transaction and check if valid (unless block is genesis block)
 		//if transaction == null { return Err(()) }	
-		if vec!(0u8) == self.prev_hash {
+		if self.prev_hash == NoobChain::genesis_hash() {
+			// genesis block, don't process transactions
+		} else {
 			if tx.process_transaction(chain) != true {
 				println!("Transaction failed to process. Discarded.");
 				return Err(());
