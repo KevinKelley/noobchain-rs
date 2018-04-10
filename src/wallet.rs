@@ -114,10 +114,11 @@ impl Wallet {
 	}
 
 	/// returns balance and stores the UTXOs owned by this wallet in self.UTXOs
-	pub fn get_balance(&self, chain: &mut NoobChain) -> f64 {
+	pub fn get_balance(&mut self, chain: &mut NoobChain) -> f64 {
 		let mut total = 0.0;
 		for (key, utxo) in &chain.UTXOs {
 			if utxo.is_mine(&self.public_key()) {
+				self.UTXOs.insert(key.clone(), utxo.clone());
 				total += utxo.value;
 			}
 		}
