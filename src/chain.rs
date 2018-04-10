@@ -169,23 +169,23 @@ impl NoobChain {
 		noobchain.dump_blocks();
 			
 
-		// let mut block2 = Block::new(&noobchain.latest_block().hash);
-		// println!("\nwallet_a Attempting to send funds (40) to wallet_b...");
-		// if let Some(transaction) = wallet_a.send_funds(&mut noobchain, wallet_b.public_key(), 40.0) {
-		// 	if let Ok(_) = block2.add_transaction(&mut noobchain, transaction) {
+		let mut block2 = Block::new(&noobchain.latest_block().hash);
+		println!("\nwallet_a Attempting to send funds (40) to wallet_b...");
+		if let Some(transaction) = wallet_a.send_funds(&mut noobchain, wallet_b.public_key(), 40.0) {
+			if let Ok(_) = block2.add_transaction(&mut noobchain, transaction) {
 
-		// 	} else {
-		// 		println!("error adding transaction to block");
-		// 	}
-		// 	noobchain.add_block(block2);
-		// } else {
-		// 	println!("error creating transaction");
-		// }
-		// println!("\ncoinbase balance is: {}", coinbase.get_balance(&mut noobchain));
-		// println!("wallet_a's balance is: {}", wallet_a.get_balance(&mut noobchain));
-		// println!("wallet_b's balance is: {}", wallet_b.get_balance(&mut noobchain));
-		// noobchain.dump_utxo();
-		// noobchain.dump_blocks();
+			} else {
+				println!("error adding transaction to block");
+			}
+			noobchain.add_block(block2);
+		} else {
+			println!("error creating transaction");
+		}
+		println!("\ncoinbase balance is: {}", coinbase.get_balance(&mut noobchain));
+		println!("wallet_a's balance is: {}", wallet_a.get_balance(&mut noobchain));
+		println!("wallet_b's balance is: {}", wallet_b.get_balance(&mut noobchain));
+		noobchain.dump_utxo();
+		noobchain.dump_blocks();
 			
 
 		// let mut block3 = Block::new(&noobchain.latest_block().hash);
