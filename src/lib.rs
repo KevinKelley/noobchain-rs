@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 #![allow(unused_variables)]
+#![allow(unused_mut)]
 
 extern crate ring;
 extern crate untrusted;
@@ -8,7 +9,7 @@ extern crate chrono;
 #[macro_use] extern crate serde_derive;
 extern crate serde;
 extern crate serde_bytes;
-
+extern crate merkle;
 extern crate itertools;
 
 pub mod crypto;
@@ -65,19 +66,62 @@ pub fn from_hex_string(hex_string: &str) -> Vec<u8> {
     }).collect()
 }
 
-pub fn count_leading(bytes: &Vec<u8>, ch: u8) -> usize {
-	0
-}
+// pub fn count_leading(bytes: &Vec<u8>, ch: u8) -> usize {
+// 	0
+// }
 
 pub fn hash_len() -> usize {
 	crypto::apply_sha256(&vec!(0u8)).len()
 }
 
 use txn::Transaction;
+use itertools::Itertools;
 pub fn get_merkle_root(transactions: &Vec<Transaction>) -> Vec<u8> {
-	vec!(1u8, 2u8, 3u8)
+	let mut count = transactions.len();
+	if count < 1 { return crypto::apply_sha256(&vec![1u8,2u8,3u8]); }
+	let mut previous_tree_layer: Vec<Vec<u8>> = vec![];
+	for transaction in transactions {
+		previous_tree_layer.push(transaction.transaction_id.clone());
+	}
+	let mut tree_layer: Vec<Vec<u8>>;// = vec![];
+	// build layers, hashing pairs of lower items, until single root
+	while count > 1 {
+		tree_layer = vec![];
+		for chunk in &previous_tree_layer.iter().chunks(2) {
+			let data:Vec<u8> = 
+					   chunk.into_iter()
+							.map(|ref bytes| crypto::apply_sha256(&bytes))
+							.flatten()
+							.collect();
+			tree_layer.push(crypto::apply_sha256(&data));
+		}
+		count = tree_layer.len();
+		previous_tree_layer = tree_layer;
+	}
+	let root = previous_tree_layer[0].clone();
+	root 
 }
-
+/*
+//Tacks in array of transactions and returns a merkle root.
+public static String getMerkleRoot(ArrayList<Transaction> transactions) {
+		int count = transactions.size();
+		ArrayList<String> previousTreeLayer = new ArrayList<String>();
+		for(Transaction transaction : transactions) {
+			previousTreeLayer.add(transaction.transactionId);
+		}
+		ArrayList<String> treeLayer = previousTreeLayer;
+		while(count > 1) {
+			treeLayer = new ArrayList<String>();
+			for(int i=1; i < previousTreeLayer.size(); i++) {
+				treeLayer.add(applySha256(previousTreeLayer.get(i-1) + previousTreeLayer.get(i)));
+			}
+			count = treeLayer.size();
+			previousTreeLayer = treeLayer;
+		}
+		String merkleRoot = (treeLayer.size() == 1) ? treeLayer.get(0) : "";
+		return merkleRoot;
+	}
+*/
 
 fn get_difficulty_string(difficulty: usize) -> String { "0".repeat(difficulty) }
 
